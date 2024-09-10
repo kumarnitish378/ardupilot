@@ -140,6 +140,7 @@ void SRV_Channel::aux_servo_function_setup(void)
     case k_flap:
     case k_flap_auto:
     case k_egg_drop:
+    case k_lift_release:
         set_range(100);
         break;
     case k_heli_rsc:
@@ -840,6 +841,31 @@ void SRV_Channels::set_output_min_max(SRV_Channel::Aux_servo_function_t function
         if (channels[i].function == function) {
             channels[i].set_output_min(min_pwm);
             channels[i].set_output_max(max_pwm);
+        }
+    }
+}
+
+// set MIN/MAX parameter defaults for a function
+void SRV_Channels::set_output_min_max_defaults(SRV_Channel::Aux_servo_function_t function, uint16_t min_pwm, uint16_t max_pwm)
+{
+    for (uint8_t i=0; i<NUM_SERVO_CHANNELS; i++) {
+        if (channels[i].function == function) {
+            channels[i].servo_min.set_default(min_pwm);
+            channels[i].servo_max.set_default(max_pwm);
+        }
+    }
+}
+
+// Save MIN/MAX/REVERSED parameters for a function
+void SRV_Channels::save_output_min_max(SRV_Channel::Aux_servo_function_t function, uint16_t min_pwm, uint16_t max_pwm)
+{
+    for (uint8_t i=0; i<NUM_SERVO_CHANNELS; i++) {
+        if (channels[i].function == function) {
+            // If min is larger than max swap and set reversed
+            const bool reversed = min_pwm > max_pwm;
+            channels[i].servo_min.set_and_save(reversed ? max_pwm : min_pwm);
+            channels[i].servo_max.set_and_save(reversed ? min_pwm : max_pwm);
+            channels[i].reversed.set_and_save(reversed ? 1 : 0);
         }
     }
 }
